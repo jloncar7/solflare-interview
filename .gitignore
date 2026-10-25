@@ -1,0 +1,11 @@
+node_modules/
+
+# Generated on every run
+logs/
+screenshots/
+reports/
+test-results/
+playwright-report/
+
+.env
+.DS_Store
