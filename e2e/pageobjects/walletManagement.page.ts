@@ -1,53 +1,64 @@
-import BasePage from './base.page';
-
-/** Wallet rows have data-testid="li-wallets-<publicKey>". */
-export const WALLET_ROW_TEST_ID_PREFIX = 'li-wallets-';
-
-/** Matches the "RECOVERY PHRASE" label regardless of how its text is capitalized in the DOM. */
-const RECOVERY_PHRASE_LABEL =
-    '//*[contains(translate(normalize-space(text()), "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"), "RECOVERY PHRASE")]';
+import Page from './page';
 
 /**
- * Wallet management panel that opens from the header avatar.
- * It lists the wallets grouped under the RECOVERY PHRASE they were derived from.
+ * Wallet management panel (opened from the header avatar) and its "Show or hide wallets" dialog.
+ * Every wallet has its public key in data-testid: the toggles in the dialog use "tgl-li-wallets-<key>"
+ * and the wallets listed under the recovery phrase use "li-wallets-<key>".
  */
-class WalletManagementPage extends BasePage {
-    get mainWallet() {
-        return $('//*[contains(normalize-space(text()), "Main wallet")]');
+class WalletManagementPage extends Page {
+    get walletManagementButton() {
+        return $('aria/Wallet management');
     }
 
-    /**
-     * Button next to the RECOVERY PHRASE label that opens its menu.
-     * It is the last button in the label's section header (the other one only collapses the list).
-     */
+    get mainWallet() {
+        return $('//*[contains(text(), "Main wallet")]');
+    }
+
+    /** The menu button is the last button in the RECOVERY PHRASE section header (the other one collapses the list). */
     get recoveryPhraseMenuButton() {
-        return $(`(${RECOVERY_PHRASE_LABEL}/ancestor::*[.//button][1]//button)[last()]`);
+        return $('(//*[contains(text(), "RECOVERY PHRASE") or contains(text(), "Recovery phrase")]/ancestor::*[.//button][1]//button)[last()]');
     }
 
     get showOrHideWalletsButton() {
-        return $('//*[normalize-space(text())="Show or hide wallets"]');
+        return $('//*[text()="Show or hide wallets"]');
     }
 
-    async openRecoveryPhraseMenu(): Promise<void> {
-        await this.click(this.recoveryPhraseMenuButton, 'arrow icon next to the RECOVERY PHRASE label');
+    get walletToggles() {
+        return $$('[data-testid^="tgl-li-wallets-"]');
+    }
+
+    get saveButton() {
+        return $('button=Save');
+    }
+
+    get listedWallets() {
+        return $$('[data-testid^="li-wallets-"]');
     }
 
     async openShowOrHideWallets(): Promise<void> {
-        await this.click(this.showOrHideWalletsButton, '"Show or hide wallets" button');
+        await this.recoveryPhraseMenuButton.click();
+        await this.showOrHideWalletsButton.click();
+        await this.walletToggles[0].waitForDisplayed();
     }
 
-    /** Public keys of the wallets that are listed under the recovery phrase, read from the rows' data-testid. */
-    async getRecoveryPhraseWalletKeys(): Promise<string[]> {
-        const rows = await $$(`[data-testid^="${WALLET_ROW_TEST_ID_PREFIX}"]`).filter((row) => row.isDisplayed());
-        const testIds = await Promise.all(rows.map((row) => row.getAttribute('data-testid')));
-        return testIds.map((testId) => (testId ?? '').slice(WALLET_ROW_TEST_ID_PREFIX.length));
+    /** A toggle is either a native checkbox or an element with aria-checked. */
+    async isToggleOn(index: number): Promise<boolean> {
+        const toggle = this.walletToggles[index];
+        return (await toggle.getAttribute('aria-checked')) === 'true' || toggle.isSelected();
     }
 
-    /** Waits until the list under the recovery phrase shows the given number of wallets (it updates after Save). */
-    async waitForWalletCount(count: number): Promise<void> {
-        await browser.waitUntil(async () => (await this.getRecoveryPhraseWalletKeys()).length === count, {
-            timeoutMsg: `Expected ${count} wallets under the recovery phrase`,
-        });
+    async getToggleWalletKey(index: number): Promise<string> {
+        return this.getWalletKey(await this.walletToggles[index].getAttribute('data-testid'));
+    }
+
+    async getListedWalletKeys(): Promise<string[]> {
+        const testIds = await this.listedWallets.map((wallet) => wallet.getAttribute('data-testid'));
+        return testIds.map((testId) => this.getWalletKey(testId));
+    }
+
+    /** The public key is the last part of the data-testid (base58 keys never contain "-"). */
+    private getWalletKey(testId: string | null): string {
+        return testId?.split('-').pop() ?? '';
     }
 }
 

@@ -1,19 +1,16 @@
+import { randomUUID } from 'node:crypto';
 import { defineConfig } from '@playwright/test';
 
 /**
- * Playwright is used only as an API test runner here, so no browser is launched.
- * Every test is independent (it gets its own request context and uuid4), so they can run in parallel.
+ * Playwright is used only for API tests, so no browser is started.
  */
 export default defineConfig({
-    testDir: './api/specs',
-    testMatch: '**/*.spec.ts',
+    testDir: './api',
     fullyParallel: true,
-    forbidOnly: !!process.env.CI,
-    retries: 0,
-    timeout: 30000,
-    reporter: [['list'], ['html', { outputFolder: 'reports/api', open: 'never' }]],
-    outputDir: 'test-results/api',
+    reporter: [['list'], ['html', { open: 'never' }]],
     use: {
-        baseURL: process.env.API_BASE_URL ?? 'https://wallet-api.solflare.com',
+        baseURL: 'https://wallet-api.solflare.com',
+        // The app generates a uuid4 per install and sends it with every request
+        extraHTTPHeaders: { Authorization: `Bearer ${randomUUID()}` },
     },
 });

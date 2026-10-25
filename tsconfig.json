@@ -11,5 +11,5 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["wdio.conf.ts", "playwright.config.ts", "e2e/**/*.ts", "api/**/*.ts", "utils/**/*.ts"]
+  "include": ["wdio.conf.ts", "playwright.config.ts", "e2e/**/*.ts", "api/**/*.ts"]
 }
