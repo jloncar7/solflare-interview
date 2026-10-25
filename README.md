@@ -29,6 +29,13 @@ npm ci
 
 A screenshot of every failed E2E test is saved to `screenshots/`.
 
+Every action is logged to the terminal with its time (`logger.ts`): pages opened, clicks and typing in the E2E test (with the selector, never the typed value) and every request with its status in the API tests:
+
+```
+[14:03:27] click button=Save
+[14:03:28] GET /v3/portfolio/tokens/Hui...?network=devnet -> 200
+```
+
 ## Project structure
 
 ```
@@ -42,6 +49,7 @@ A screenshot of every failed E2E test is saved to `screenshots/`.
 ├── api/
 │   └── tokens.spec.ts                 # API scenarios 1-4
 ├── .github/workflows/tests.yml        # GitHub Actions: API tests + E2E in Chrome and Firefox
+├── logger.ts                          # action logger used by both parts
 ├── wdio.conf.ts
 └── playwright.config.ts
 ```

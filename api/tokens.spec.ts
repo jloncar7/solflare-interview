@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
+import { log } from '../logger';
 
 const WALLET_ADDRESS = 'HuiTegTpNAU7EJXvn95HKEWBdFMtWZYko4yoFVQyCKUS';
 const TOKENS_PATH = `/v3/portfolio/tokens/${WALLET_ADDRESS}`;
@@ -7,6 +8,7 @@ const SOL_TOKEN = { name: 'Solana', symbol: 'SOL', mint: '1111111111111111111111
 /** Fetches the wallet's tokens, the network query parameter is only sent when given. */
 async function getTokens(request: APIRequestContext, network?: string) {
     const response = await request.get(TOKENS_PATH, { params: network ? { network } : undefined });
+    log(`GET ${TOKENS_PATH}${network ? `?network=${network}` : ''} -> ${response.status()}`);
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('application/json');
     const { tokens } = await response.json();
@@ -56,7 +58,7 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
         test(`Scenario 3: ${name} returns 400 or 404 with an error message`, async ({ request }) => {
             const response = await request.get(path);
             const errorMessage = await response.text();
-            console.log(`${name}: ${response.status()} ${errorMessage}`);
+            log(`GET ${path} -> ${response.status()} ${errorMessage}`);
 
             expect([400, 404]).toContain(response.status());
             expect(errorMessage).not.toBe('');

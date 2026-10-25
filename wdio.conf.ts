@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs';
+import { log } from './logger';
 
 /**
  * Browser and headless mode are chosen from the command line, e.g.:
@@ -44,13 +45,33 @@ export const config: WebdriverIO.Config = {
         mkdirSync(SCREENSHOT_DIR, { recursive: true });
     },
 
-    // Same window size in every browser and mode, so the layout is always the desktop one
     async before() {
+        // Same window size in every browser and mode, so the layout is always the desktop one
         await browser.setWindowSize(1920, 1080);
+
+        // Action logger: every page opened, click and typing is logged with its selector,
+        // without any change in the page objects. Typed values are not logged, they can be passwords.
+        browser.overwriteCommand('url', async (originalUrl, path) => {
+            log(`open ${path}`);
+            return originalUrl(path);
+        });
+        browser.overwriteCommand('click', async function (this: WebdriverIO.Element, originalClick, options) {
+            log(`click ${this.selector}`);
+            return originalClick(options);
+        }, true);
+        browser.overwriteCommand('setValue', async function (this: WebdriverIO.Element, originalSetValue, value) {
+            log(`type into ${this.selector}`);
+            return originalSetValue(value);
+        }, true);
+    },
+
+    beforeTest(test) {
+        log(`START ${test.title}`);
     },
 
     // Screenshot of every failed test: screenshots/<browser>_<test title>.png
     async afterTest(test, _context, { passed }) {
+        log(`${passed ? 'PASSED' : 'FAILED'} ${test.title}`);
         if (!passed) {
             const fileName = `${browserName}_${test.title.replace(/\W+/g, '_')}.png`;
             await browser.saveScreenshot(`${SCREENSHOT_DIR}/${fileName}`);
