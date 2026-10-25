@@ -41,9 +41,14 @@ A screenshot of every failed E2E test is saved to `screenshots/`.
 │       └── walletManagement.e2e.ts    # the E2E test
 ├── api/
 │   └── tokens.spec.ts                 # API scenarios 1-4
+├── .github/workflows/tests.yml        # GitHub Actions: API tests + E2E in Chrome and Firefox
 ├── wdio.conf.ts
 └── playwright.config.ts
 ```
+
+## GitHub Actions
+
+`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**. The API HTML report and the screenshots of failed E2E tests are uploaded as artifacts.
 
 ## E2E test
 
