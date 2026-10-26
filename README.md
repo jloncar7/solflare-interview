@@ -81,7 +81,20 @@ Every request has an `Authorization: Bearer {uuid4}` header, the same way the ap
 
 | Scenario | What is checked |
 | --- | --- |
-| 1. Devnet token validation | `network=devnet` returns more than one token. Every token has a mint, a valid `totalUiAmount`, and `price` / `coingeckoId` fields of the right type (they can be `null` on devnet) |
-| 2. SOL token validation | Without `network` only SOL is returned, with the correct name, symbol, mint, `totalUiAmount` and a price |
-| 3. Break the API | An invalid address, an unsupported network and an unknown endpoint return 400 or 404 with an error message, which is printed to the console |
-| 4. Mainnet → devnet → mainnet | Devnet returns more tokens than mainnet, and both mainnet responses are identical apart from the prices |
+| 1. Devnet token validation | `network=devnet` returns more than one token besides SOL. Every token has a mint, a valid `totalUiAmount` and a `coingeckoId` (a string or `null`). `price` is checked when a token has one (devnet test tokens have none) |
+| 2. SOL token validation | Without `network` only SOL is returned. SOL has the correct name, symbol, mint, `totalUiAmount` and a price |
+| 3. Break the API | An invalid address, an unsupported network and an unknown endpoint return 400 or 404 with a JSON error that has a `message` and the same `code`. The message is printed to the console |
+| 4. Mainnet → devnet → mainnet | Devnet returns tokens that mainnet does not have, and both mainnet responses are identical apart from the prices (`price` and `solPrice`) |
+
+## Findings
+
+**Headless Chrome is blocked on `/onboard`.** In headless Chrome, `https://solflare.com/onboard` answers with only `{"errors":["Too many requests."]}`, even after waiting more than an hour. The test then stops in step 1 with `Solflare is rate limiting this IP (Too many requests)`. Headed Chrome, headed Firefox and headless Firefox pass on the same machine at the same time, so the site most likely blocks headless Chrome on purpose. The headless mode itself works (`npm run test:e2e -- --browser=firefox --headless`). For headless Chrome runs, for example in CI, Solflare would have to allow them, e.g. with a test environment or an allowlisted IP.
+
+**Scenario 2 fails: without `network` the API returns 6 tokens, not only SOL.** The test is kept as the assignment describes it, so it reports the difference.
+
+- The response without `network` is the mainnet response (the same tokens as `network=mainnet`).
+- Besides SOL, the address holds token accounts for bSOL, USDC and USDT with a balance of 0, and tiny amounts of BERN (0.00005) and TSLAx (0.00000001).
+- The SOL token itself is correct (name, symbol, mint, `totalUiAmount`, price). That part of the test is a soft assertion, so it is still checked and reported.
+- Most likely the address held only SOL when the assignment was written and has received other tokens since. The expectation then depends on the address's current balance, not on the API.
+
+**Devnet SOL is valued at the mainnet SOL price.** With `network=devnet` the SOL token has the mainnet USD price, so `value.total` shows about 200 USD for test tokens with no real value. This may be intended, but it is worth a question.
