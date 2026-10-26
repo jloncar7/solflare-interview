@@ -21,9 +21,12 @@ class OnboardPage extends Page {
         return $$('input[type="password"]')[1];
     }
 
-    /** The real checkbox input is visually hidden, so its outermost label is clicked instead. */
+    /**
+     * The real checkbox input is visually hidden, so the label right around it (the visible box) is clicked.
+     * The outer label also holds the Terms of Service link, and a click in its middle would open that link.
+     */
     get termsCheckbox() {
-        return $('//input[@name="termsAccepted"]/ancestor::label[last()]');
+        return $('//input[@name="termsAccepted"]/ancestor::label[1]');
     }
 
     get continueButton() {
