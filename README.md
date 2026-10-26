@@ -88,6 +88,8 @@ Every request has an `Authorization: Bearer {uuid4}` header, the same way the ap
 
 ## Findings
 
+**Headless Chrome is blocked on `/onboard`.** In headless Chrome, `https://solflare.com/onboard` answers with only `{"errors":["Too many requests."]}` (HTTP 429), even after waiting more than an hour. The test then stops in step 1 with `Solflare is rate limiting this IP (Too many requests)`. Headed Chrome, headed Firefox and headless Firefox pass on the same machine at the same time, so the site most likely blocks headless Chrome on purpose. The headless mode itself works (`npm run test:e2e -- --browser=firefox --headless`). For headless Chrome runs, for example in CI, Solflare would have to allow them, e.g. with a test environment or an allowlisted IP.
+
 **Scenario 2 fails: without `network` the API returns 6 tokens, not only SOL.** The test is kept as the assignment describes it, so it reports the difference.
 
 - The response without `network` is the mainnet response (the same tokens as `network=mainnet`).
