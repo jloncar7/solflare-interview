@@ -31,11 +31,17 @@ A screenshot of every failed E2E test is saved to `screenshots/`.
 
 To watch the E2E test step by step, set `SLOW_MO` to a pause in milliseconds after every action (PowerShell: `$env:SLOW_MO=1000; npm run test:e2e`, bash: `SLOW_MO=1000 npm run test:e2e`).
 
-Every action is logged to the terminal with its time (`logger.ts`): the steps of the E2E test, pages opened, clicks and typing (with the element's text or name, never the typed value), the wallet keys that are compared, and every API request with its status:
+Every step and action is logged to the terminal with its time (`logger.ts`). In the E2E test every step of the assignment is logged on its own line, with the result of each check, and the typed password is never logged. The API tests log every request with its status:
 
 ```
-[14:03:26] STEP 14: save
-[14:03:27] click "Save"
+[14:03:25] STEP 13: select the 3rd and 4th wallet
+[14:03:25]    switch on wallet 3 (E7Ap...PEKL)
+[14:03:25]    switch on wallet 4 (J3L4...dHfQ)
+[14:03:26] STEP 14: click "Save"
+[14:03:27] STEP Expected result: the list contains the original wallet and the two newly added wallets
+[14:03:27]    expected wallets: 5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
+[14:03:27]    listed wallets:   5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
+[14:03:27]    OK
 [14:03:28] GET /v3/portfolio/tokens/Hui...?network=devnet -> 200
 ```
 
@@ -65,7 +71,7 @@ Every action is logged to the terminal with its time (`logger.ts`): the steps of
 
 The test follows the steps of the assignment. Notes on how it works:
 
-- After **Get started** the site currently asks which kind of wallet to set up, so **Create new wallet** is clicked when that screen is shown.
+- After **Get started** the site shows a screen that is not in the assignment steps, with **Create new wallet** and **Continue with Google**. The test clicks **Create new wallet** as its own step.
 - Every wallet has its public key in its `data-testid`. The keys of the 1st, 3rd and 4th wallet are read in the **Show or hide wallets** dialog, and after **Save** the test checks that exactly these three wallets are listed under the recovery phrase.
 - Every run starts with a fresh browser profile, so a new wallet is created each time and no cleanup is needed.
 
