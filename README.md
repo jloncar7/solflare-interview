@@ -29,6 +29,8 @@ npm ci
 
 A screenshot of every failed E2E test is saved to `screenshots/`.
 
+To watch the E2E test step by step, set `SLOW_MO` to a pause in milliseconds after every action (PowerShell: `$env:SLOW_MO=1000; npm run test:e2e`, bash: `SLOW_MO=1000 npm run test:e2e`).
+
 Every action is logged to the terminal with its time (`logger.ts`): pages opened, clicks and typing in the E2E test (with the selector, never the typed value) and every request with its status in the API tests:
 
 ```

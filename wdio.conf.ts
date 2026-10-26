@@ -26,6 +26,9 @@ if (!capabilities[browserName]) {
 
 const SCREENSHOT_DIR = './screenshots';
 
+/** Optional pause in ms after every action, to watch the test step by step, e.g. SLOW_MO=1000 */
+const slowMo = Number(process.env.SLOW_MO ?? 0);
+
 export const config: WebdriverIO.Config = {
     runner: 'local',
     specs: ['./e2e/specs/**/*.e2e.ts'],
@@ -51,17 +54,22 @@ export const config: WebdriverIO.Config = {
 
         // Action logger: every page opened, click and typing is logged with its selector,
         // without any change in the page objects. Typed values are not logged, they can be passwords.
+        // With SLOW_MO set, every action is followed by a pause so the run can be watched.
         browser.overwriteCommand('url', async (originalUrl, path) => {
             log(`open ${path}`);
-            return originalUrl(path);
+            const result = await originalUrl(path);
+            await browser.pause(slowMo);
+            return result;
         });
         browser.overwriteCommand('click', async function (this: WebdriverIO.Element, originalClick, options) {
             log(`click ${this.selector}`);
-            return originalClick(options);
+            await originalClick(options);
+            await browser.pause(slowMo);
         }, true);
         browser.overwriteCommand('setValue', async function (this: WebdriverIO.Element, originalSetValue, value) {
             log(`type into ${this.selector}`);
-            return originalSetValue(value);
+            await originalSetValue(value);
+            await browser.pause(slowMo);
         }, true);
     },
 
