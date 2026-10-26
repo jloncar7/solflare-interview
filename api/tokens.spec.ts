@@ -39,14 +39,19 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
 
     test('Scenario 2: without network only the SOL token is returned', async ({ request }) => {
         const tokens = await getTokens(request);
+        const symbols = tokens.map((token: { symbol: string }) => token.symbol);
+        log(`tokens without network: ${symbols.join(', ')}`);
 
-        expect(tokens).toHaveLength(1);
-        expect(tokens[0]).toMatchObject({
+        // Soft assertion: the test fails if other tokens are returned, but the SOL checks below still run
+        expect.soft(symbols, 'only the SOL token is returned').toEqual([SOL_TOKEN.symbol]);
+
+        const solToken = tokens.find((token: { mint: string }) => token.mint === SOL_TOKEN.mint);
+        expect(solToken, 'the SOL token is in the response').toMatchObject({
             ...SOL_TOKEN,
             totalUiAmount: expect.any(Number),
-            price: { price: expect.any(Number) },
+            price: { price: expect.any(Number), currency: expect.any(String) },
         });
-        expect(tokens[0].totalUiAmount).toBeGreaterThanOrEqual(0);
+        expect(solToken.totalUiAmount).toBeGreaterThanOrEqual(0);
     });
 
     // Scenario 3: every case sends one kind of unexpected data
