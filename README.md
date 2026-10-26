@@ -69,7 +69,7 @@ Every step and action is logged to the terminal with its time (`logger.ts`). In 
 
 The test follows the steps of the assignment. Notes on how it works:
 
-- After **Get started** the site currently asks which kind of wallet to set up, so **Create new wallet** is clicked when that screen is shown.
+- After **Get started** the site shows a screen that is not in the assignment steps, with **Create new wallet** and **Continue with Google**. The test clicks **Create new wallet** as its own step.
 - Every wallet has its public key in its `data-testid`. The keys of the 1st, 3rd and 4th wallet are read in the **Show or hide wallets** dialog, and after **Save** the test checks that exactly these three wallets are listed under the recovery phrase.
 - Every run starts with a fresh browser profile, so a new wallet is created each time and no cleanup is needed.
 

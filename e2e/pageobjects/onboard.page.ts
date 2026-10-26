@@ -9,7 +9,7 @@ class OnboardPage extends Page {
         return $('button*=Get started');
     }
 
-    /** Extra screen the site shows after "Get started" (it is not in the assignment steps). */
+    /** On the screen after "Get started", next to "Continue with Google" (this screen is not in the assignment steps). */
     get createNewWalletButton() {
         return $('button*=Create new wallet');
     }
@@ -41,12 +41,11 @@ class OnboardPage extends Page {
     async clickGetStarted(): Promise<void> {
         action('click "Get started"');
         await this.getStartedButton.click();
-        // Only click "Create new wallet" if that screen is shown
-        const hasWalletTypeScreen = await this.createNewWalletButton.waitForDisplayed({ timeout: 5000 }).catch(() => false);
-        if (hasWalletTypeScreen) {
-            action('click "Create new wallet"');
-            await this.createNewWalletButton.click();
-        }
+    }
+
+    async clickCreateNewWallet(): Promise<void> {
+        action('click "Create new wallet"');
+        await this.createNewWalletButton.click();
     }
 
     /** Fills in both password fields, accepts the terms and continues. */

@@ -10,6 +10,8 @@ describe('Wallet management', () => {
         step('1-6: create a new wallet');
         await onboardPage.open();
         await onboardPage.clickGetStarted();
+        // The site shows a screen between "Get started" and the password form that the assignment does not list
+        await onboardPage.clickCreateNewWallet();
         await onboardPage.createPassword(PASSWORD);
 
         step('7-8: open wallet management, the main wallet is displayed');
