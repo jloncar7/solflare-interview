@@ -1,4 +1,5 @@
 import Page from './page';
+import { action, shortKey } from '../../logger';
 
 /**
  * Wallet management panel (opened from the header avatar) and its "Show or hide wallets" dialog.
@@ -39,10 +40,28 @@ class WalletManagementPage extends Page {
         return $$('[data-testid^="li-wallets-"]');
     }
 
+    async openWalletManagement(): Promise<void> {
+        action('click the "Main Wallet" pill in the header');
+        await this.walletManagementButton.click();
+    }
+
     async openShowOrHideWallets(): Promise<void> {
+        action('open the menu next to RECOVERY PHRASE');
         await this.recoveryPhraseMenuButton.click();
+        action('click "Show or hide wallets"');
         await this.showOrHideWalletsButton.click();
         await this.walletToggles[0].waitForDisplayed();
+    }
+
+    /** Switches on the wallet at the given index (0 = first) in the "Show or hide wallets" dialog. */
+    async selectWallet(index: number): Promise<void> {
+        action(`switch on wallet ${index + 1} (${shortKey(await this.getToggleWalletKey(index))})`);
+        await this.walletToggles[index].click();
+    }
+
+    async save(): Promise<void> {
+        action('click "Save"');
+        await this.saveButton.click();
     }
 
     /** A toggle is either a native checkbox or an element with aria-checked. */

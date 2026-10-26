@@ -31,11 +31,15 @@ A screenshot of every failed E2E test is saved to `screenshots/`.
 
 To watch the E2E test step by step, set `SLOW_MO` to a pause in milliseconds after every action (PowerShell: `$env:SLOW_MO=1000; npm run test:e2e`, bash: `SLOW_MO=1000 npm run test:e2e`).
 
-Every action is logged to the terminal with its time (`logger.ts`): the steps of the E2E test, pages opened, clicks and typing (with the element's text or name, never the typed value), the wallet keys that are compared, and every API request with its status:
+Every step and action is logged to the terminal with its time (`logger.ts`). In the E2E test the page objects describe each action in plain words, and the typed password is never logged. The API tests log every request with its status:
 
 ```
 [14:03:26] STEP 14: save
-[14:03:27] click "Save"
+[14:03:26]    click "Save"
+[14:03:27] STEP Expected result: the list contains the original wallet and the two newly added wallets
+[14:03:27]    expected wallets: 5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
+[14:03:27]    listed wallets:   5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
+[14:03:27]    OK: the list contains exactly the expected wallets
 [14:03:28] GET /v3/portfolio/tokens/Hui...?network=devnet -> 200
 ```
 
