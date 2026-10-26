@@ -35,6 +35,10 @@ class OnboardPage extends Page {
 
     async open(): Promise<void> {
         await super.open('/onboard');
+        // When an IP sends too many requests, Solflare answers with only {"errors":["Too many requests."]}
+        if ((await $('body').getText()).includes('Too many requests')) {
+            throw new Error('Solflare is rate limiting this IP (Too many requests), wait a few minutes and try again');
+        }
     }
 
     async clickGetStarted(): Promise<void> {
