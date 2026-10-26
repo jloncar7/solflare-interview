@@ -6,12 +6,16 @@ import Page from './page';
  * and the wallets listed under the recovery phrase use "li-wallets-<key>".
  */
 class WalletManagementPage extends Page {
+    /**
+     * Wallet management is opened from the pill in the top right corner of the header
+     * (initials, wallet name and address). Before the panel opens, its "Main Wallet" text is the first one on the page.
+     */
     get walletManagementButton() {
-        return $('aria/Wallet management');
+        return $('(//*[normalize-space(text())="Main Wallet"])[1]');
     }
 
     get mainWallet() {
-        return $('//*[contains(text(), "Main wallet")]');
+        return $('//*[contains(text(), "Main Wallet") or contains(text(), "Main wallet")]');
     }
 
     /** The menu button is the last button in the RECOVERY PHRASE section header (the other one collapses the list). */

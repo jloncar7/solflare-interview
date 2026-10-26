@@ -26,6 +26,28 @@ if (!capabilities[browserName]) {
 
 const SCREENSHOT_DIR = './screenshots';
 
+/** Optional pause in ms after every action, to watch the test step by step, e.g. SLOW_MO=1000 */
+const slowMo = Number(process.env.SLOW_MO ?? 0);
+
+/**
+ * Readable name of an element for the log: its visible text, else its aria-label, placeholder
+ * or data-testid, else the selector. A missing element is still reported by the action's own error.
+ */
+async function describeElement(element: WebdriverIO.Element): Promise<string> {
+    // The logger must never break the test, so any problem falls back to the selector
+    try {
+        await element.waitForExist();
+        const text = (await element.getText()).trim().split('\n')[0];
+        const name = text
+            || (await element.getAttribute('aria-label'))
+            || (await element.getAttribute('placeholder'))
+            || (await element.getAttribute('data-testid'));
+        return name ? `"${name}"` : String(element.selector);
+    } catch {
+        return String(element.selector);
+    }
+}
+
 export const config: WebdriverIO.Config = {
     runner: 'local',
     specs: ['./e2e/specs/**/*.e2e.ts'],
@@ -49,19 +71,24 @@ export const config: WebdriverIO.Config = {
         // Same window size in every browser and mode, so the layout is always the desktop one
         await browser.setWindowSize(1920, 1080);
 
-        // Action logger: every page opened, click and typing is logged with its selector,
+        // Action logger: every page opened, click and typing is logged with the element's name,
         // without any change in the page objects. Typed values are not logged, they can be passwords.
+        // With SLOW_MO set, every action is followed by a pause so the run can be watched.
         browser.overwriteCommand('url', async (originalUrl, path) => {
             log(`open ${path}`);
-            return originalUrl(path);
+            const result = await originalUrl(path);
+            await browser.pause(slowMo);
+            return result;
         });
         browser.overwriteCommand('click', async function (this: WebdriverIO.Element, originalClick, options) {
-            log(`click ${this.selector}`);
-            return originalClick(options);
+            log(`click ${await describeElement(this)}`);
+            await originalClick(options);
+            await browser.pause(slowMo);
         }, true);
         browser.overwriteCommand('setValue', async function (this: WebdriverIO.Element, originalSetValue, value) {
-            log(`type into ${this.selector}`);
-            return originalSetValue(value);
+            log(`type into ${await describeElement(this)}`);
+            await originalSetValue(value);
+            await browser.pause(slowMo);
         }, true);
     },
 
