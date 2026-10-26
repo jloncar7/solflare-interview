@@ -15,9 +15,9 @@ async function getTokens(request: APIRequestContext, network?: string) {
     return tokens;
 }
 
-/** Removes the price, which can change between two requests, so responses can be compared. */
-function withoutPrices(tokens: { price: unknown }[]) {
-    return tokens.map(({ price, ...token }) => token);
+/** Removes the prices (in USD and in SOL), which can change between two requests, so responses can be compared. */
+function withoutPrices(tokens: { price?: unknown; solPrice?: unknown }[]) {
+    return tokens.map(({ price, solPrice, ...token }) => token);
 }
 
 test.describe('GET /v3/portfolio/tokens/{address}', () => {
@@ -28,11 +28,12 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
         for (const token of tokens) {
             expect(token).toMatchObject({ mint: expect.any(String), totalUiAmount: expect.any(Number) });
             expect(token.totalUiAmount).toBeGreaterThanOrEqual(0);
-            // price and coingeckoId exist on every token, but devnet tokens can have null values
-            expect(token).toHaveProperty('price');
+            // coingeckoId is on every token (null for unknown devnet tokens), price only on tokens that have one
             expect(token).toHaveProperty('coingeckoId');
-            expect(token.price === null || typeof token.price === 'object').toBe(true);
             expect(token.coingeckoId === null || typeof token.coingeckoId === 'string').toBe(true);
+            if (token.price !== undefined) {
+                expect(token.price).toMatchObject({ price: expect.any(Number), currency: expect.any(String) });
+            }
         }
     });
 
@@ -57,11 +58,14 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
     for (const { name, path } of invalidRequests) {
         test(`Scenario 3: ${name} returns 400 or 404 with an error message`, async ({ request }) => {
             const response = await request.get(path);
-            const errorMessage = await response.text();
-            log(`GET ${path} -> ${response.status()} ${errorMessage}`);
+            const error = await response.json();
+            log(`GET ${path} -> ${response.status()} ${error.message}`);
 
             expect([400, 404]).toContain(response.status());
-            expect(errorMessage).not.toBe('');
+            // Every error has a message and repeats the status code, e.g. { "message": "Invalid public key provided", "code": 400 }
+            expect(error.message).toEqual(expect.any(String));
+            expect(error.message).not.toBe('');
+            expect(error.code).toBe(response.status());
         });
     }
 
@@ -70,9 +74,12 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
         const devnet = await getTokens(request, 'devnet');
         const secondMainnet = await getTokens(request, 'mainnet');
 
-        // devnet has additional tokens compared to mainnet
-        expect(devnet.length).toBeGreaterThan(firstMainnet.length);
-        // both mainnet responses are identical, except maybe the price
+        // devnet has tokens that mainnet does not have
+        const mainnetMints = firstMainnet.map((token: { mint: string }) => token.mint);
+        const devnetOnlyTokens = devnet.filter((token: { mint: string }) => !mainnetMints.includes(token.mint));
+        log(`devnet tokens that mainnet does not have: ${devnetOnlyTokens.length}`);
+        expect(devnetOnlyTokens.length).toBeGreaterThan(0);
+        // both mainnet responses are identical, except maybe the prices
         expect(withoutPrices(secondMainnet)).toEqual(withoutPrices(firstMainnet));
         expect(withoutPrices(secondMainnet)).not.toEqual(withoutPrices(devnet));
     });
