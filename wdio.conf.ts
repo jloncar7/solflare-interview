@@ -57,7 +57,7 @@ export const config: WebdriverIO.Config = {
         // Same window size in every browser and mode, so the layout is always the desktop one
         await browser.setWindowSize(1920, 1080);
 
-        // Every page that is opened is logged, the other actions are logged by the page objects
+        // Every page that is opened is logged, the steps themselves are logged by the test
         browser.overwriteCommand('url', async (originalUrl, path) => {
             action(`open ${path}`);
             const result = await originalUrl(path);

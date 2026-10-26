@@ -41,14 +41,15 @@ class WalletManagementPage extends Page {
     }
 
     async openWalletManagement(): Promise<void> {
-        action('click the "Main Wallet" pill in the header');
         await this.walletManagementButton.click();
     }
 
-    async openShowOrHideWallets(): Promise<void> {
-        action('open the menu next to RECOVERY PHRASE');
+    async openRecoveryPhraseMenu(): Promise<void> {
         await this.recoveryPhraseMenuButton.click();
-        action('click "Show or hide wallets"');
+    }
+
+    /** Opens the dialog and waits until its wallet list is shown. */
+    async clickShowOrHideWallets(): Promise<void> {
         await this.showOrHideWalletsButton.click();
         await this.walletToggles[0].waitForDisplayed();
     }
@@ -60,7 +61,6 @@ class WalletManagementPage extends Page {
     }
 
     async save(): Promise<void> {
-        action('click "Save"');
         await this.saveButton.click();
     }
 

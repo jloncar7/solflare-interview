@@ -1,5 +1,4 @@
 import Page from './page';
-import { action } from '../../logger';
 
 /**
  * Onboarding at /onboard: welcome screen and the "create a password" form.
@@ -39,24 +38,26 @@ class OnboardPage extends Page {
     }
 
     async clickGetStarted(): Promise<void> {
-        action('click "Get started"');
         await this.getStartedButton.click();
     }
 
     async clickCreateNewWallet(): Promise<void> {
-        action('click "Create new wallet"');
         await this.createNewWalletButton.click();
     }
 
-    /** Fills in both password fields, accepts the terms and continues. */
-    async createPassword(password: string): Promise<void> {
-        // The password itself is never logged
-        action('type the password into both password fields');
+    async enterPassword(password: string): Promise<void> {
         await this.passwordInput.setValue(password);
+    }
+
+    async enterRepeatPassword(password: string): Promise<void> {
         await this.repeatPasswordInput.setValue(password);
-        action('tick "I agree to the Terms of Service and Privacy Policy"');
+    }
+
+    async acceptTerms(): Promise<void> {
         await this.termsCheckbox.click();
-        action('click "Continue"');
+    }
+
+    async clickContinue(): Promise<void> {
         await this.continueButton.click();
     }
 }

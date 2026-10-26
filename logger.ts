@@ -1,8 +1,8 @@
 /**
  * Action logger shared by the E2E and API tests.
  * Every line starts with the time, and actions are indented under the test step they belong to, e.g.:
- *   [14:03:26] STEP 14: save
- *   [14:03:26]    click "Save"
+ *   [14:03:25] STEP 13: select the 3rd and 4th wallet
+ *   [14:03:25]    switch on wallet 3 (E7Ap...PEKL)
  *   [14:03:28] GET /v3/portfolio/tokens/Hui...?network=devnet -> 200
  */
 export function log(message: string): void {
