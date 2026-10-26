@@ -1,0 +1,6 @@
+node_modules/
+
+# Generated on every run
+screenshots/
+playwright-report/
+test-results/
