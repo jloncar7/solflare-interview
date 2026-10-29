@@ -2,42 +2,45 @@ import Page from './page';
 
 /**
  * Onboarding at /onboard: welcome screen and the "create a password" form.
+ * Every element is found by its data-testid (or another attribute the site sets for it), not by text,
+ * position or CSS classes, so the selectors keep working when texts, layout or styles change.
  */
 class OnboardPage extends Page {
     get getStartedButton() {
-        return $('button*=Get started');
+        return $('[data-testid="btn-get-started"]');
     }
 
-    /** On the screen after "Get started", next to "Continue with Google" (this screen is not in the assignment steps). */
+    /** On the screen after "Get started", above "Continue with Google" */
     get createNewWalletButton() {
-        return $('button*=Create new wallet');
+        return $('[data-testid="btn-manual-create"]');
     }
 
     get passwordInput() {
-        return $$('input[type="password"]')[0];
+        return $('[data-testid="input-new-password"]');
     }
 
     get repeatPasswordInput() {
-        return $$('input[type="password"]')[1];
+        return $('[data-testid="input-repeat-password"]');
     }
 
     /**
-     * The real checkbox input is visually hidden, so the label right around it (the visible box) is clicked.
-     * The outer label also holds the Terms of Service link, and a click in its middle would open that link.
+     * The real checkbox input is visually hidden, so the box around it (label data-id="checkbox") is clicked.
+     * It is looked up inside the terms row (data-key), and not the whole row is clicked, because the row
+     * also holds the Terms of Service link and a click in its middle would open that link.
      */
     get termsCheckbox() {
-        return $('//input[@name="termsAccepted"]/ancestor::label[1]');
+        return $('label[data-key="onboard-term-and-conditions-check"] label[data-id="checkbox"]');
     }
 
     get continueButton() {
-        return $('button=Continue');
+        return $('[data-testid="btn-continue"]');
     }
 
     async open(): Promise<void> {
         await super.open('/onboard');
-        // When an IP sends too many requests, Solflare answers with only {"errors":["Too many requests."]}
+        // Solflare answers blocked clients (e.g. headless Chrome's User-Agent) with only {"errors":["Too many requests."]}
         if ((await $('body').getText()).includes('Too many requests')) {
-            throw new Error('Solflare is rate limiting this IP (Too many requests), wait a few minutes and try again');
+            throw new Error('Solflare blocked this browser ("Too many requests"), see Findings in the README');
         }
     }
 

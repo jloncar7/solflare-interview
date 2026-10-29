@@ -101,12 +101,15 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
     for (const { name, path } of invalidRequests) {
         test(`Scenario 3: ${name} returns 400 or 404 with an error message`, async ({ request }) => {
             const response = await request.get(path);
+            // 400 = the path exists but the data is wrong, 404 = the path does not exist.
+            // The status is checked before the body is read, so a 500 with an HTML page fails with
+            // the wrong status in the report, not with an unclear JSON parse error.
+            expect([400, 404], `status of GET ${path}`).toContain(response.status());
+            expect(response.headers()['content-type']).toContain('application/json');
+
             const error = await response.json();
             // "The error message is displayed": it is printed to the log
             log(`GET ${path} -> ${response.status()} ${error.message}`);
-
-            // 400 = the path exists but the data is wrong, 404 = the path does not exist
-            expect([400, 404]).toContain(response.status());
             // Every error has a message and repeats the status code, e.g. { "message": "Invalid public key provided", "code": 400 }
             expect(error.message).toEqual(expect.any(String));
             expect(error.message).not.toBe('');
