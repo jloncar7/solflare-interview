@@ -9,7 +9,7 @@ QA Automation assignment for Solflare, written in TypeScript:
 
 ## Setup
 
-Requires Node.js 20 or newer. Browsers and drivers don't need to be installed, WebdriverIO downloads them on the first run.
+Requires Node.js 20.5 or newer on the 20 line, or 22 or newer (`npm test` uses `npm-run-all2`, which does not run on older versions or on 21). Browsers and drivers don't need to be installed, WebdriverIO downloads them on the first run.
 
 ```bash
 git clone https://github.com/jloncar7/solflare-interview.git
@@ -130,7 +130,7 @@ Every request has an `Authorization: Bearer {uuid4}` header, the same way the ap
 | 1. Devnet token validation | `network=devnet` returns more than one token, not only SOL. Every token has a mint, a valid `totalUiAmount` and a `coingeckoId` (a string or `null`). `price` is checked when a token has one (devnet test tokens have none) |
 | 2. SOL token validation | Without `network` only SOL is returned. SOL has the correct name, symbol, mint, `totalUiAmount` and a price |
 | 3. Break the API | An invalid address, an unsupported network and an unknown endpoint return 400 or 404 (checked first, so a 500 fails with a clear status) with a JSON error that has a `message` and the same `code`. The message is printed to the console |
-| 4. Mainnet → devnet → mainnet | Devnet returns tokens that mainnet does not have, and both mainnet responses are identical apart from the prices (`price` and `solPrice`) |
+| 4. Mainnet → devnet → mainnet | Devnet returns tokens that mainnet does not have, and both mainnet responses are identical apart from the prices: the whole response is compared (tokens, balances, settings such as `onrampTokenId`, `errors`), leaving out only the token prices (`price`, `solPrice`) and the totals calculated from them (`value`, `solValue`, `tokensValue`, ...) |
 
 ## Findings
 

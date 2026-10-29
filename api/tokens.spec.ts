@@ -36,21 +36,32 @@ async function get(request: APIRequestContext, path: string, params?: Record<str
 }
 
 /**
- * Fetches the wallet's tokens and checks that the request itself worked (status 200, JSON body).
+ * Fetches the wallet's portfolio and checks that the request itself worked (status 200, JSON body).
+ * The body holds the token list plus totals (value, solValue, ...), settings (onrampTokenId, ...) and errors.
  * The network query parameter is only sent when given, so scenario 2 really sends no network at all.
  */
-async function getTokens(request: APIRequestContext, network?: string) {
+async function getPortfolio(request: APIRequestContext, network?: string) {
     const response = await get(request, TOKENS_PATH, network ? { network } : undefined);
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('application/json');
-    // The body also has totals (value, solValue, ...) and errors, the tests only need the token list
-    const { tokens } = await response.json();
-    return tokens;
+    return response.json();
 }
 
-/** Removes the prices (in USD and in SOL), which can change between two requests, so responses can be compared. */
-function withoutPrices(tokens: { price?: unknown; solPrice?: unknown }[]) {
-    return tokens.map(({ price, solPrice, ...token }) => token);
+/** Fetches only the wallet's token list, which is all that scenarios 1 and 2 need. */
+async function getTokens(request: APIRequestContext, network?: string) {
+    return (await getPortfolio(request, network)).tokens;
+}
+
+/** Totals of the response that are calculated from the prices, so they change whenever a price changes. */
+const PRICE_TOTALS = ['value', 'solValue', 'tokensValue', 'tokensSolValue', 'stocksValue', 'stocksSolValue'];
+
+/**
+ * Removes everything that depends on the prices (the price of every token in USD and in SOL, and the totals),
+ * so two responses can be compared. Every other field of the response stays.
+ */
+function withoutPrices(portfolio: Record<string, unknown> & { tokens: { price?: unknown; solPrice?: unknown }[] }) {
+    const rest = Object.fromEntries(Object.entries(portfolio).filter(([key]) => !PRICE_TOTALS.includes(key)));
+    return { ...rest, tokens: portfolio.tokens.map(({ price, solPrice, ...token }) => token) };
 }
 
 test.describe('GET /v3/portfolio/tokens/{address}', () => {
@@ -153,19 +164,20 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
      * because the second and third are compared with the first.
      */
     test('Scenario 4: switching mainnet -> devnet -> mainnet restores the mainnet response', async ({ request }) => {
-        const firstMainnet = await getTokens(request, 'mainnet');
-        const devnet = await getTokens(request, 'devnet');
-        const secondMainnet = await getTokens(request, 'mainnet');
+        const firstMainnet = await getPortfolio(request, 'mainnet');
+        const devnet = await getPortfolio(request, 'devnet');
+        const secondMainnet = await getPortfolio(request, 'mainnet');
 
         // "additional tokens appear compared to mainnet": devnet has tokens (mints) that mainnet does not have.
         // Comparing the number of tokens would not work, because this address has more tokens on mainnet.
-        const mainnetMints = firstMainnet.map((token: { mint: string }) => token.mint);
-        const devnetOnlyTokens = devnet.filter((token: { mint: string }) => !mainnetMints.includes(token.mint));
+        const mainnetMints = firstMainnet.tokens.map((token: { mint: string }) => token.mint);
+        const devnetOnlyTokens = devnet.tokens.filter((token: { mint: string }) => !mainnetMints.includes(token.mint));
         log(`devnet tokens that mainnet does not have: ${devnetOnlyTokens.length}`);
         expect(devnetOnlyTokens.length).toBeGreaterThan(0);
 
         // "first and third requests should return identical responses, except maybe the price":
-        // every token detail and balance is the same once the prices are left out
+        // the whole response is compared, with every token detail and balance, the settings and the errors.
+        // Only the prices and the totals calculated from them are left out.
         expect(withoutPrices(secondMainnet)).toEqual(withoutPrices(firstMainnet));
         // and the third response is really mainnet again, not the devnet one
         expect(withoutPrices(secondMainnet)).not.toEqual(withoutPrices(devnet));
