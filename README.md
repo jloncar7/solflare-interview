@@ -27,19 +27,29 @@ npm ci
 | `npm run test:e2e -- --browser=firefox --headless` | Any combination of browser (`chrome`, `firefox`) and mode |
 | `npm run test:api` | All API tests |
 | `npx playwright test -g "Scenario 2"` | A single API test (every test is independent) |
-| `npm run report` | Allure HTML report of the last E2E run, opened in the browser |
+| `npm run report` | Allure HTML report of the last E2E and API run, opened in the browser |
 | `npx playwright show-report` | HTML report of the last API run |
 | `npm run typecheck` | TypeScript check of the whole project |
 
 A screenshot of every failed E2E test is saved to `screenshots/<browser>_<test title>.png` by the generic screenshot module `e2e/helpers/screenshot.ts`, and it is also attached to the failed step in the Allure report.
 
-### Allure report (E2E)
+### Allure report (E2E and API)
 
-Every E2E run writes its results to `allure-results/`, and `npm run report` turns them into an HTML report and opens it. `npm test` already builds the report into `allure-report/` at the end (about 3 seconds), but does not open it, so the command still ends on its own. It uses Allure 3, which runs on Node.js, so no Java is needed. The report shows:
+One Allure report holds the results of both parts. Each test runner writes its own raw results, and each run only clears its own folder, so running one part does not remove the results of the other:
 
-- every step of the assignment as its own step, with the actions and checks inside it (`e2e/helpers/report.ts`), instead of a long list of WebDriver commands,
-- the error and a screenshot on the step where a test failed,
-- the browser and mode that were tested (Environment).
+| Part | Allure reporter | Results |
+| --- | --- | --- |
+| E2E (WebdriverIO) | `@wdio/allure-reporter` | `allure-results/e2e` |
+| API (Playwright) | `allure-playwright` | `allure-results/api` |
+
+`npm run report` turns both folders into one HTML report and opens it. `npm test` already builds the report into `allure-report/` at the end (about 3 seconds), but does not open it, so the command still ends on its own. It uses Allure 3, which runs on Node.js, so no Java is needed. The report shows:
+
+- every step of the E2E test as its own step, with the actions and checks inside it (`e2e/helpers/report.ts`), instead of a long list of WebDriver commands,
+- every API test with its log (requests and their status) and, for Scenario 2, why it fails,
+- the error and a screenshot on the step where an E2E test failed,
+- the browser and mode of the E2E run (Environment).
+
+The Playwright HTML report (`npx playwright show-report`) stays as well, it shows more detail when an API test fails.
 
 The typed password is masked (`setValue(..., { mask: true })`) and WebDriver commands are left out of the report, so the password is not in the report either.
 
@@ -79,8 +89,9 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 │   └── specs/
 │       └── walletManagement.e2e.ts    # the E2E test
 ├── api/
+│   ├── globalSetup.ts                 # clears the API Allure results before a run
 │   └── tokens.spec.ts                 # API scenarios 1-4
-├── .github/workflows/tests.yml        # GitHub Actions: API tests + E2E in Chrome and Firefox
+├── .github/workflows/tests.yml        # GitHub Actions: API tests + E2E in Chrome and Firefox + one Allure report
 ├── logger.ts                          # winston action logger used by both parts (terminal + logs/test.log)
 ├── wdio.conf.ts
 └── playwright.config.ts
@@ -88,7 +99,7 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 
 ## GitHub Actions
 
-`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. The API HTML report, the Allure report of each E2E job and the screenshots of failed E2E tests are uploaded as artifacts. A downloaded Allure report is opened with `npx allure open <folder>`.
+`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. When the test jobs have finished, a `report` job builds one Allure report from the results of the API job and both E2E jobs and uploads it as the `allure-report` artifact. A downloaded report is opened with `npx allure open <folder>`. The Playwright HTML report (`api-report`) and the screenshots of failed E2E tests are uploaded as well.
 
 The E2E jobs pass in both browsers. The API job is red on purpose, because Scenario 2 fails (see [Findings](#findings)), the other API tests pass.
 

@@ -9,8 +9,8 @@
     "test:e2e:firefox": "wdio run ./wdio.conf.ts --browser=firefox",
     "test:api": "playwright test",
     "typecheck": "tsc --noEmit",
-    "report": "allure generate ./allure-results -o ./allure-report --clean && allure open ./allure-report",
-    "report:generate": "allure generate ./allure-results -o ./allure-report --clean && echo Allure report is ready, open it with: npm run report"
+    "report": "allure generate ./allure-results/e2e ./allure-results/api -o ./allure-report --clean --name \"Solflare QA Automation\" && allure open ./allure-report",
+    "report:generate": "allure generate ./allure-results/e2e ./allure-results/api -o ./allure-report --clean --name \"Solflare QA Automation\" && echo Allure report is ready, open it with: npm run report"
   },
   "repository": {
     "type": "git",
@@ -39,6 +39,7 @@
     "@wdio/spec-reporter": "^9.32.0",
     "allure": "^3.22.1",
     "allure-js-commons": "^3.14.0",
+    "allure-playwright": "^3.14.0",
     "npm-run-all2": "^8.0.4",
     "typescript": "^5.9.3",
     "winston": "^3.19.0"

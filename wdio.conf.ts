@@ -40,8 +40,11 @@ if (!capabilities[browserName]) {
     throw new Error(`Unsupported browser "${browserName}", use one of: ${Object.keys(capabilities).join(', ')}`);
 }
 
-/** Raw results of the Allure reporter, "npm run report" turns them into an HTML report */
-const ALLURE_RESULTS_DIR = './allure-results';
+/**
+ * Raw results of the Allure reporter. The API tests write theirs to allure-results/api,
+ * and "npm run report" turns both into one HTML report.
+ */
+const ALLURE_RESULTS_DIR = './allure-results/e2e';
 
 /** Optional pause in ms after every action, to watch the test step by step, e.g. SLOW_MO=1000 */
 const slowMo = Number(process.env.SLOW_MO ?? 0);
