@@ -5,6 +5,8 @@ QA Automation assignment for Solflare, written in TypeScript:
 1. **E2E test** with **WebdriverIO** (Mocha, Page Object pattern): onboarding and wallet management at `https://solflare.com/onboard`.
 2. **API tests** with **Playwright Test**: `GET /v3/portfolio/tokens/{address}` on `https://wallet-api.solflare.com`.
 
+📊 **[Latest test report](https://jloncar7.github.io/solflare-interview/)**: the Allure report of the latest GitHub Actions run on `main`, with the E2E test in Chrome and Firefox and all API tests. Scenario 2 fails on purpose, see [Findings](#findings).
+
 ## Setup
 
 Requires Node.js 20 or newer. Browsers and drivers don't need to be installed, WebdriverIO downloads them on the first run.
@@ -94,7 +96,7 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 ├── api/
 │   ├── globalSetup.ts                 # clears the API Allure results before a run
 │   └── tokens.spec.ts                 # API scenarios 1-4
-├── .github/workflows/tests.yml        # GitHub Actions: API tests + E2E in Chrome and Firefox + one Allure report
+├── .github/workflows/tests.yml        # GitHub Actions: API tests + E2E in Chrome and Firefox + Allure report on GitHub Pages
 ├── allurerc.mjs                       # Allure report: name, result folders, grouping, categories, metadata
 ├── logger.ts                          # winston action logger used by both parts (terminal + logs/test.log)
 ├── wdio.conf.ts
@@ -103,7 +105,7 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 
 ## GitHub Actions
 
-`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. When the test jobs have finished, a `report` job builds one Allure report from the results of the API job and both E2E jobs and uploads it as the `allure-report` artifact. After downloading it, open its `index.html` in a browser. The Playwright HTML report (`api-report`) and the screenshots of failed E2E tests are uploaded as well.
+`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. When the test jobs have finished, a `report` job builds one Allure report from the results of the API job and both E2E jobs and uploads it as the `allure-report` artifact. After downloading it, open its `index.html` in a browser. For runs on `main`, a `pages` job also publishes the report to GitHub Pages, which is the [Latest test report](https://jloncar7.github.io/solflare-interview/) link at the top. The Playwright HTML report (`api-report`) and the screenshots of failed E2E tests are uploaded as well.
 
 The E2E jobs pass in both browsers. The API job is red on purpose, because Scenario 2 fails (see [Findings](#findings)), the other API tests pass.
 

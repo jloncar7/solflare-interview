@@ -75,3 +75,26 @@ jobs:
         with:
           name: allure-report
           path: allure-report
+
+  # Publishes the Allure report to GitHub Pages, so the link in the README always shows the report of the
+  # latest run on main. Runs on other branches only keep the report as an artifact.
+  pages:
+    needs: report
+    if: always() && needs.report.result == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: allure-report
+          path: allure-report
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: allure-report
+      - id: deployment
+        uses: actions/deploy-pages@v5
