@@ -1,4 +1,5 @@
 import { rmSync } from 'node:fs';
+import { addArgument, addEpic, addFeature } from '@wdio/allure-reporter';
 import { log } from './logger';
 import { action, endStep } from './e2e/helpers/report';
 import { saveScreenshot } from './e2e/helpers/screenshot';
@@ -40,8 +41,11 @@ if (!capabilities[browserName]) {
     throw new Error(`Unsupported browser "${browserName}", use one of: ${Object.keys(capabilities).join(', ')}`);
 }
 
-/** Raw results of the Allure reporter, "npm run report" turns them into an HTML report */
-const ALLURE_RESULTS_DIR = './allure-results';
+/**
+ * Raw results of the Allure reporter. The API tests write theirs to allure-results/api,
+ * and "npm run report" turns both into one HTML report.
+ */
+const ALLURE_RESULTS_DIR = './allure-results/e2e';
 
 /** Optional pause in ms after every action, to watch the test step by step, e.g. SLOW_MO=1000 */
 const slowMo = Number(process.env.SLOW_MO ?? 0);
@@ -63,12 +67,7 @@ export const config: WebdriverIO.Config = {
         'spec',
         // The steps in the report are the test case steps from e2e/helpers/report.ts. WebDriver commands are left out,
         // they would bury the steps and would also show the typed password. Screenshots are still attached.
-        ['allure', {
-            outputDir: ALLURE_RESULTS_DIR,
-            disableWebdriverStepsReporting: true,
-            // Shown in the report, so it is clear which browser and mode were tested
-            reportedEnvironmentVars: { browser: browserName, headless: String(isHeadless) },
-        }],
+        ['allure', { outputDir: ALLURE_RESULTS_DIR, disableWebdriverStepsReporting: true }],
     ],
     mochaOpts: { timeout: 120000 },
 
@@ -104,15 +103,23 @@ export const config: WebdriverIO.Config = {
 
     beforeTest(test) {
         log(`START ${test.title}`);
+        // Puts the test under "E2E (WebdriverIO)" > its describe block in the Allure tree, next to the API tests
+        // (groupBy in allurerc.mjs). Epic and feature are used, because the reporter fills the suite labels itself.
+        addEpic('E2E (WebdriverIO)');
+        addFeature(test.parent);
+        // The reporter adds the browser (with its version) as a parameter of the test, the mode is added here.
+        // Both are on the test, not in the report's metadata, because a report built from several runs
+        // (Chrome and Firefox in GitHub Actions) keeps the metadata of only one of them.
+        addArgument('headless', String(isHeadless));
     },
 
-    // Screenshot of every failed test: screenshots/<browser>_<test title>.png (e2e/helpers/screenshot.ts).
-    // It is also attached to the failed step in the Allure report, then that last step is ended.
+    // Ends the last step with the result of the test. A failed test also gets a screenshot,
+    // saved to screenshots/<browser>_<test title>.png and attached to the test in the Allure report.
     async afterTest(test, _context, { passed }) {
+        endStep(passed);
         log(`${passed ? 'PASSED' : 'FAILED'} ${test.title}`);
         if (!passed) {
             await saveScreenshot(test.title);
         }
-        endStep(passed);
     },
 };

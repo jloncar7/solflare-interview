@@ -1,4 +1,5 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
+import * as allure from 'allure-js-commons';
 import { log } from '../logger';
 
 /**
@@ -14,12 +15,32 @@ const TOKENS_PATH = `/v3/portfolio/tokens/${WALLET_ADDRESS}`;
 const SOL_TOKEN = { name: 'Solana', symbol: 'SOL', mint: '11111111111111111111111111111111' };
 
 /**
+ * Sends a GET request as its own step, so the reports list every request, and attaches the response
+ * body (pretty-printed when it is JSON) to that step. The request is also logged with its status.
+ */
+async function get(request: APIRequestContext, path: string, params?: Record<string, string>) {
+    const url = params ? `${path}?${new URLSearchParams(params)}` : path;
+    return test.step(`GET ${url}`, async () => {
+        const response = await request.get(path, { params });
+        log(`GET ${url} -> ${response.status()}`);
+        const body = await response.text();
+        let attachment = { body, contentType: 'text/plain' };
+        try {
+            attachment = { body: JSON.stringify(JSON.parse(body), null, 2), contentType: 'application/json' };
+        } catch {
+            // Not JSON, attached as plain text
+        }
+        await test.info().attach(`response ${response.status()}`, attachment);
+        return response;
+    });
+}
+
+/**
  * Fetches the wallet's tokens and checks that the request itself worked (status 200, JSON body).
  * The network query parameter is only sent when given, so scenario 2 really sends no network at all.
  */
 async function getTokens(request: APIRequestContext, network?: string) {
-    const response = await request.get(TOKENS_PATH, { params: network ? { network } : undefined });
-    log(`GET ${TOKENS_PATH}${network ? `?network=${network}` : ''} -> ${response.status()}`);
+    const response = await get(request, TOKENS_PATH, network ? { network } : undefined);
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('application/json');
     // The body also has totals (value, solValue, ...) and errors, the tests only need the token list
@@ -65,6 +86,15 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
      * because the address has received other tokens since the assignment was written. See Findings in the README.
      */
     test('Scenario 2: without network only the SOL token is returned', async ({ request }) => {
+        // Explains the expected failure in the Allure report and puts it under "Known issue" (allurerc.mjs)
+        await allure.tag('known-issue');
+        await allure.description(
+            'Fails on purpose. Without `network` the API returns the mainnet tokens of the address: SOL and five more ' +
+            '(bSOL, USDC and USDT with a balance of 0, tiny amounts of BERN and TSLAx). The address has most likely ' +
+            'received them after the assignment was written. The SOL token itself is checked and correct.',
+        );
+        await allure.link('https://github.com/jloncar7/solflare-interview#findings', 'Findings in the README');
+
         const tokens = await getTokens(request);
         const symbols = tokens.map((token: { symbol: string }) => token.symbol);
         log(`tokens without network: ${symbols.join(', ')}`);
@@ -100,7 +130,7 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
     ];
     for (const { name, path } of invalidRequests) {
         test(`Scenario 3: ${name} returns 400 or 404 with an error message`, async ({ request }) => {
-            const response = await request.get(path);
+            const response = await get(request, path);
             // 400 = the path exists but the data is wrong, 404 = the path does not exist.
             // The status is checked before the body is read, so a 500 with an HTML page fails with
             // the wrong status in the report, not with an unclear JSON parse error.
@@ -108,8 +138,8 @@ test.describe('GET /v3/portfolio/tokens/{address}', () => {
             expect(response.headers()['content-type']).toContain('application/json');
 
             const error = await response.json();
-            // "The error message is displayed": it is printed to the log
-            log(`GET ${path} -> ${response.status()} ${error.message}`);
+            // "The error message is displayed": it is printed to the log and is in the attached response
+            log(`error message: ${error.message}`);
             // Every error has a message and repeats the status code, e.g. { "message": "Invalid public key provided", "code": 400 }
             expect(error.message).toEqual(expect.any(String));
             expect(error.message).not.toBe('');

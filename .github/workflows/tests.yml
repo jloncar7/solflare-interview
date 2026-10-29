@@ -20,6 +20,12 @@ jobs:
         with:
           name: api-report
           path: playwright-report
+      # Raw Allure results, the report job turns them into one report together with the E2E results
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: allure-results-api
+          path: allure-results/api
 
   e2e:
     runs-on: ubuntu-latest
@@ -35,16 +41,60 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:e2e -- --browser=${{ matrix.browser }} --headless
-      # The Allure HTML report is built and uploaded after every run, passed or failed
-      - run: npx allure generate ./allure-results -o ./allure-report
-        if: always()
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: e2e-allure-report-${{ matrix.browser }}
-          path: allure-report
+          name: allure-results-e2e-${{ matrix.browser }}
+          path: allure-results/e2e
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: e2e-screenshots-${{ matrix.browser }}
           path: screenshots
+
+  # One Allure report for the API tests and the E2E test in both browsers, built after they finished, passed or failed
+  report:
+    needs: [api, e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Every artifact lands in its own folder: allure-results/allure-results-api, .../allure-results-e2e-chrome, ...
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: allure-results-*
+          path: allure-results
+      # Name, grouping and categories come from allurerc.mjs, the result folders are the downloaded artifacts
+      - run: npx allure generate allure-results/*
+      - uses: actions/upload-artifact@v7
+        with:
+          name: allure-report
+          path: allure-report
+
+  # Publishes the Allure report to GitHub Pages, so the link in the README always shows the report of the
+  # latest run on main. Runs on other branches only keep the report as an artifact.
+  pages:
+    needs: report
+    if: always() && needs.report.result == 'success' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: allure-report
+          path: allure-report
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: allure-report
+      - id: deployment
+        uses: actions/deploy-pages@v5
