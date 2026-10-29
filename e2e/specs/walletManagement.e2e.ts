@@ -37,6 +37,8 @@ describe('Wallet management', () => {
 
         step('5: tick "I agree to the Terms of Service and Privacy Policy"');
         await onboardPage.acceptTerms();
+        // The click goes to the visible box, so this checks that the real checkbox behind it is now ticked
+        await expect(onboardPage.termsCheckboxInput).toBeSelected();
 
         step('6: click "Continue"');
         await onboardPage.clickContinue();
@@ -46,10 +48,12 @@ describe('Wallet management', () => {
         await walletManagementPage.openWalletManagement();
 
         step('8: verify that the main wallet is displayed');
-        // WebdriverIO's expect waits and retries until the element is displayed, so no fixed pause is needed
+        // WebdriverIO's expect waits and retries until the element is displayed, so no fixed pause is needed.
+        // Every WebdriverIO check is logged with its result by afterAssertion in wdio.conf.ts.
+        // stringContaining is used instead of the { containing: true } option, because passing options
+        // replaces WebdriverIO's defaults, and with them the hook that logs the check.
         await expect(walletManagementPage.mainWallet).toBeDisplayed();
-        await expect(walletManagementPage.mainWallet).toHaveText('Main Wallet', { containing: true });
-        action('OK');
+        await expect(walletManagementPage.mainWallet).toHaveText(expect.stringContaining('Main Wallet'));
 
         // Steps 9-10: one recovery phrase can create many wallets; this dialog chooses which ones are shown
         // The assignment says "arrow icon", but "Show or hide wallets" is only in the kebab menu (the arrow collapses the list)
@@ -62,12 +66,10 @@ describe('Wallet management', () => {
         // Steps 11-12: the first wallet is the main wallet, it is always shown, so its toggle is on and locked
         step('11: verify that the first toggle is disabled');
         await expect(walletManagementPage.walletToggles[0]).toBeDisabled();
-        action('OK');
 
         step('12: verify that the first toggle is on');
-        // isToggleOn returns a value that is already known, so this is a plain expect without waiting
-        expect(await walletManagementPage.isToggleOn(0)).toBe(true);
-        action('OK');
+        // The toggles are switches (role="switch"), "on" is aria-checked="true"
+        await expect(walletManagementPage.walletToggles[0]).toHaveAttribute('aria-checked', 'true');
 
         step('13: select the 3rd and 4th wallet');
         // Remember the keys of all wallets that should be listed at the end. A wallet's public key is
@@ -90,8 +92,9 @@ describe('Wallet management', () => {
         const listedWalletKeys = await walletManagementPage.getListedWalletKeys();
         action(`expected wallets: ${expectedWalletKeys.map(shortKey).join(', ')}`);
         action(`listed wallets:   ${listedWalletKeys.map(shortKey).join(', ')}`);
-        // Both lists are sorted, so only which wallets are listed matters, not their order
+        // Both lists are sorted, so only which wallets are listed matters, not their order.
+        // A plain value check does not go through the assertion hook, so its result is logged here.
         expect(listedWalletKeys.sort()).toEqual(expectedWalletKeys.sort());
-        action('OK');
+        action('check the listed wallets are the expected ones: passed');
     });
 });
