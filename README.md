@@ -9,7 +9,7 @@ QA Automation assignment for Solflare, written in TypeScript:
 
 ## Setup
 
-Requires Node.js 20.5 or newer on the 20 line, or 22 or newer (`npm test` uses `npm-run-all2`, which does not run on older versions or on 21). Browsers and drivers don't need to be installed, WebdriverIO downloads them on the first run.
+Requires Node.js 20.9 or newer on the 20 line, or 22 or newer (`npm test` uses `npm-run-all2` and `npm run lint` uses ESLint, which do not run on older versions or on 21). Browsers and drivers don't need to be installed, WebdriverIO downloads them on the first run.
 
 ```bash
 git clone https://github.com/jloncar7/solflare-interview.git
@@ -32,6 +32,7 @@ npm ci
 | `npm run report` | Allure HTML report of the last E2E and API run, opened in the browser |
 | `npx playwright show-report` | HTML report of the last API run |
 | `npm run typecheck` | TypeScript check of the whole project |
+| `npm run lint` | ESLint, including the naming conventions (see [Naming conventions](#naming-conventions-lint)) |
 
 A screenshot of every failed E2E test is saved to `screenshots/<browser>_<date>_<time>_<test title>.png` (e.g. `chrome_2026-10-29_15-30-05_should_list_....png`) by the generic screenshot module `e2e/helpers/screenshot.ts`, so earlier failures are kept, and it is also attached to the failed test in the Allure report.
 
@@ -66,19 +67,46 @@ Optional environment variables for the E2E test (PowerShell: `$env:SLOW_MO=1000;
 | `TEST_PASSWORD` | built-in test password | Password of the new wallet |
 | `TOGGLE_SETTLE_MS` | `500` | Wait in ms before **Save**, raise it on a slow machine (see [Findings](#findings)) |
 
-Every step and action is logged with its time by `logger.ts`, which uses the [winston](https://github.com/winstonjs/winston) logging framework. The log goes to the terminal and to `logs/test.log`. In the E2E test every step of the assignment is logged on its own line, with the result of each check, and the typed password is never logged. The API tests log every request with its status:
+Every step and action is logged with its time by `logger.ts`, which uses the [winston](https://github.com/winstonjs/winston) logging framework. The log goes to the terminal and to `logs/test.log`. In the E2E test every step of the assignment is logged on its own line, and below it, without any code in the page objects:
+
+- every opened page, click and typed value, with the element's selector (`before` hook in `wdio.conf.ts`). The password is typed with `{ mask: true }` and logged as `********`,
+- every WebdriverIO check with its expected value and result, passed or FAILED (`afterAssertion` hook in `wdio.conf.ts`).
+
+The API tests log every request with its status:
 
 ```
-[14:03:25] STEP 13: select the 3rd and 4th wallet
-[14:03:25]    switch on wallet 3 (E7Ap...PEKL)
-[14:03:25]    switch on wallet 4 (J3L4...dHfQ)
-[14:03:26] STEP 14: click "Save"
-[14:03:27] STEP Expected result: the list contains the original wallet and the two newly added wallets
-[14:03:27]    expected wallets: 5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
-[14:03:27]    listed wallets:   5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
-[14:03:27]    OK
-[14:03:28] GET /v3/portfolio/tokens/Hui...?network=devnet -> 200
+[17:07:42] STEP 5: tick "I agree to the Terms of Service and Privacy Policy"
+[17:07:42]    click label[data-key="onboard-term-and-conditions-check"] label[data-id="checkbox"]
+[17:07:42]    check toBeSelected: passed | Expect $(`input[name="termsAccepted"]`) to be selected
+...
+[17:07:43] STEP 12: verify that the first toggle is on
+[17:07:43]    check toHaveAttribute ["aria-checked","true"]: passed | Expect $$(`[data-testid^="tgl-li-wallets-"]`)[0] to have attribute aria-checked
+[17:07:43] STEP 13: select the 3rd and 4th wallet
+[17:07:43]    switch on wallet 3 (E7Ap...PEKL)
+[17:07:43]    click [data-testid^="tgl-li-wallets-"][2]
+[17:07:43]    switch on wallet 4 (J3L4...dHfQ)
+[17:07:43]    click [data-testid^="tgl-li-wallets-"][3]
+[17:07:44] STEP 14: click "Save"
+[17:07:44]    click [data-testid="btn-save"]
+[17:07:44] STEP Expected result: the list contains the original wallet and the two newly added wallets
+[17:07:44]    check toBeElementsArrayOfSize 3: passed | Expect $$(`[data-testid="section-Recovery phrase"] [data-testid^="li-wallets-"]`) to be elements array of size
+[17:07:44]    expected wallets: 5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
+[17:07:44]    listed wallets:   5iLH...DH31, E7Ap...PEKL, J3L4...dHfQ
+[17:07:44]    check the listed wallets are the expected ones: passed
+[17:07:45] GET /v3/portfolio/tokens/Hui...?network=devnet -> 200
 ```
+
+### Naming conventions (lint)
+
+`npm run lint` runs ESLint (`eslint.config.mjs`). Besides the recommended JavaScript and TypeScript rules, it checks the naming conventions the assignment asks for:
+
+| What | Convention | Example |
+| --- | --- | --- |
+| Variables, functions, methods | camelCase, constants may be UPPER_CASE | `walletToggles`, `saveScreenshot()`, `TOGGLE_SETTLE_MS` |
+| Classes and types | PascalCase | `WalletManagementPage` |
+| Files and folders | camelCase, a middle extension such as `.page` or `.spec` is not part of the name | `walletManagement.page.ts`, `pageobjects/` |
+
+Object keys are not checked, because many are given by others, such as HTTP headers or browser options.
 
 ## Project structure
 
@@ -96,8 +124,9 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 ├── api/
 │   ├── globalSetup.ts                 # clears the API Allure results before a run
 │   └── tokens.spec.ts                 # API scenarios 1-4
-├── .github/workflows/tests.yml        # GitHub Actions: API tests + E2E in Chrome and Firefox + Allure report on GitHub Pages
+├── .github/workflows/tests.yml        # GitHub Actions: typecheck + lint, API tests, E2E in Chrome and Firefox, Allure report on GitHub Pages
 ├── allurerc.mjs                       # Allure report: name, result folders, grouping, categories, metadata
+├── eslint.config.mjs                  # npm run lint: recommended rules and naming conventions
 ├── logger.ts                          # winston action logger used by both parts (terminal + logs/test.log)
 ├── wdio.conf.ts
 └── playwright.config.ts
@@ -105,7 +134,7 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 
 ## GitHub Actions
 
-`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. When the test jobs have finished, a `report` job builds one Allure report from the results of the API job and both E2E jobs and uploads it as the `allure-report` artifact. After downloading it, open its `index.html` in a browser. For runs on `main`, a `pages` job also publishes the report to GitHub Pages, which is the [Latest test report](https://jloncar7.github.io/solflare-interview/) link at the top. The Playwright HTML report (`api-report`) and the screenshots of failed E2E tests are uploaded as well.
+`.github/workflows/tests.yml` runs the TypeScript check and the lint (`checks` job), the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. When the test jobs have finished, a `report` job builds one Allure report from the results of the API job and both E2E jobs and uploads it as the `allure-report` artifact. After downloading it, open its `index.html` in a browser. For runs on `main`, a `pages` job also publishes the report to GitHub Pages, which is the [Latest test report](https://jloncar7.github.io/solflare-interview/) link at the top. The Playwright HTML report (`api-report`) and the screenshots of failed E2E tests are uploaded as well.
 
 The E2E jobs pass in both browsers. The API job is red on purpose, because Scenario 2 fails (see [Findings](#findings)), the other API tests pass.
 

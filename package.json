@@ -10,7 +10,8 @@
     "test:api": "playwright test",
     "typecheck": "tsc --noEmit",
     "report": "allure generate --clean && allure open",
-    "report:generate": "allure generate --clean && echo Allure report is ready, open it with: npm run report"
+    "report:generate": "allure generate --clean && echo Allure report is ready, open it with: npm run report",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
   },
   "homepage": "https://github.com/jloncar7/solflare-interview#readme",
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.63.0",
     "@types/node": "^22.20.5",
     "@wdio/allure-reporter": "^9.32.0",
@@ -40,12 +42,15 @@
     "allure": "^3.22.1",
     "allure-js-commons": "^3.14.0",
     "allure-playwright": "^3.14.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-check-file": "^3.3.2",
     "npm-run-all2": "^8.0.4",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1",
     "winston": "^3.19.0"
   },
   "type": "module",
   "engines": {
-    "node": "^20.5.0 || >=22.0.0"
+    "node": "^20.9.0 || >=22.0.0"
   }
 }

@@ -50,6 +50,21 @@ const ALLURE_RESULTS_DIR = './allure-results/e2e';
 /** Optional pause in ms after every action, to watch the test step by step, e.g. SLOW_MO=1000 */
 const slowMo = Number(process.env.SLOW_MO ?? 0);
 
+/** Expected value of a check for the log, e.g. 3, ["aria-checked","true"] or StringContaining "Main Wallet". */
+function describeExpected(value: unknown): string {
+    const matcher = value as { asymmetricMatch?: unknown; sample?: unknown } | null;
+    if (typeof matcher?.asymmetricMatch === 'function') {
+        return `${String(matcher)} ${JSON.stringify(matcher.sample)}`;
+    }
+    return JSON.stringify(value);
+}
+
+/** Short name of an element for the log: its selector, plus its position when it was picked from a list. */
+function describeElement(element: WebdriverIO.Element): string {
+    const position = element.index === undefined ? '' : `[${element.index}]`;
+    return `${String(element.selector)}${position}`;
+}
+
 export const config: WebdriverIO.Config = {
     runner: 'local',
     specs: ['./e2e/specs/**/*.e2e.ts'],
@@ -88,17 +103,28 @@ export const config: WebdriverIO.Config = {
             return result;
         });
 
-        // With SLOW_MO set, every click and typing is followed by a pause so the run can be watched
-        if (slowMo > 0) {
-            browser.overwriteCommand('click', async (originalClick, options) => {
-                await originalClick(options);
-                await browser.pause(slowMo);
-            }, true);
-            browser.overwriteCommand('setValue', async (originalSetValue, value, options) => {
-                await originalSetValue(value, options);
-                await browser.pause(slowMo);
-            }, true);
-        }
+        // Every click and every typed value is logged as an action of the current step, so no page object has to
+        // log them itself. A masked value (the password) is logged as "********". With SLOW_MO set, every click
+        // and typing is followed by a pause so the run can be watched.
+        browser.overwriteCommand('click', async function (originalClick, options) {
+            action(`click ${describeElement(this)}`);
+            await originalClick(options);
+            await browser.pause(slowMo);
+        }, true);
+        browser.overwriteCommand('setValue', async function (originalSetValue, value, options) {
+            action(`type ${options?.mask ? '********' : JSON.stringify(value)} into ${describeElement(this)}`);
+            await originalSetValue(value, options);
+            await browser.pause(slowMo);
+        }, true);
+    },
+
+    // Every WebdriverIO assertion (toBeDisplayed, toBeDisabled, toHaveText, ...) is logged with its result as an
+    // action of the current step. Plain value checks (toBe, toEqual) do not call this hook, the test logs those.
+    afterAssertion({ matcherName, expectedValue, result }) {
+        // At runtime the result says "pass", the type calls it "result"
+        const passed = (result as unknown as { pass: boolean }).pass;
+        const expected = expectedValue === undefined ? '' : ` ${describeExpected(expectedValue)}`;
+        action(`check ${matcherName}${expected}: ${passed ? 'passed' : 'FAILED'} | ${result.message().split('\n')[0]}`);
     },
 
     beforeTest(test) {

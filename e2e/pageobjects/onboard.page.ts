@@ -32,6 +32,11 @@ class OnboardPage extends Page {
         return $('label[data-key="onboard-term-and-conditions-check"] label[data-id="checkbox"]');
     }
 
+    /** The real (hidden) checkbox input, used to check that the click above really ticked it. */
+    get termsCheckboxInput() {
+        return $('input[name="termsAccepted"]');
+    }
+
     get continueButton() {
         return $('[data-testid="btn-continue"]');
     }
