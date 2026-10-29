@@ -1,5 +1,5 @@
 import { rmSync } from 'node:fs';
-import { addEpic, addFeature } from '@wdio/allure-reporter';
+import { addArgument, addEpic, addFeature } from '@wdio/allure-reporter';
 import { log } from './logger';
 import { action, endStep } from './e2e/helpers/report';
 import { saveScreenshot } from './e2e/helpers/screenshot';
@@ -67,12 +67,7 @@ export const config: WebdriverIO.Config = {
         'spec',
         // The steps in the report are the test case steps from e2e/helpers/report.ts. WebDriver commands are left out,
         // they would bury the steps and would also show the typed password. Screenshots are still attached.
-        ['allure', {
-            outputDir: ALLURE_RESULTS_DIR,
-            disableWebdriverStepsReporting: true,
-            // Shown in the report, so it is clear which browser and mode were tested
-            reportedEnvironmentVars: { 'E2E browser': browserName, 'E2E headless': String(isHeadless) },
-        }],
+        ['allure', { outputDir: ALLURE_RESULTS_DIR, disableWebdriverStepsReporting: true }],
     ],
     mochaOpts: { timeout: 120000 },
 
@@ -112,6 +107,10 @@ export const config: WebdriverIO.Config = {
         // (groupBy in allurerc.mjs). Epic and feature are used, because the reporter fills the suite labels itself.
         addEpic('E2E (WebdriverIO)');
         addFeature(test.parent);
+        // The reporter adds the browser (with its version) as a parameter of the test, the mode is added here.
+        // Both are on the test, not in the report's metadata, because a report built from several runs
+        // (Chrome and Firefox in GitHub Actions) keeps the metadata of only one of them.
+        addArgument('headless', String(isHeadless));
     },
 
     // Ends the last step with the result of the test. A failed test also gets a screenshot,

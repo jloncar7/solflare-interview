@@ -49,7 +49,8 @@ One Allure report holds the results of both parts. Each test runner writes its o
 - every request of an API test as its own step, with the response body attached,
 - Scenario 2 under the category **Known issue**, with a description of why it fails and a link to the Findings,
 - the error and a screenshot of an E2E test that failed,
-- as metadata: the browser and mode of the E2E run, the API base URL and the wallet address.
+- the browser and mode of every E2E run as parameters of the test, so Chrome and Firefox are told apart in a report built from both,
+- as metadata: the API base URL and the wallet address.
 
 The Playwright HTML report (`npx playwright show-report`) stays as well, it shows more detail when an API test fails.
 

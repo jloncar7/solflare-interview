@@ -9,7 +9,7 @@ export default defineConfig({
     name: 'Solflare QA Automation',
     output: './allure-report',
     resultsDir: ['./allure-results/e2e', './allure-results/api'],
-    // Shown as Metadata on the report's first page, next to the browser and mode of the E2E run
+    // Shown as Metadata on the report's first page. The browser and mode of an E2E run are parameters of the test.
     variables: {
         'API base URL': 'https://wallet-api.solflare.com',
         'API wallet address': 'HuiTegTpNAU7EJXvn95HKEWBdFMtWZYko4yoFVQyCKUS',
