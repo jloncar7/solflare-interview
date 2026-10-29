@@ -51,7 +51,8 @@ describe('Wallet management', () => {
         action('OK');
 
         // Steps 9-10: one recovery phrase can create many wallets; this dialog chooses which ones are shown
-        step('9: click the arrow icon next to RECOVERY PHRASE');
+        // The assignment says "arrow icon", but "Show or hide wallets" is only in the kebab menu (the arrow collapses the list)
+        step('9: click the kebab menu (⋮) next to RECOVERY PHRASE');
         await walletManagementPage.openRecoveryPhraseMenu();
 
         step('10: click "Show or hide wallets"');

@@ -41,8 +41,8 @@ class WalletManagementPage extends Page {
     }
 
     /**
-     * The "arrow icon" next to RECOVERY PHRASE from the assignment. On the site it is the "More options"
-     * menu button of the section (the other button in the section header collapses the list).
+     * The kebab menu (⋮, aria-label "More options") next to RECOVERY PHRASE. The assignment calls it
+     * "arrow icon", but the arrow in the section header only collapses the list.
      */
     get recoveryPhraseMenuButton() {
         return $(`${RECOVERY_PHRASE_SECTION} [data-testid="icon-btn-wallet-section-options"]`);

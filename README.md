@@ -85,7 +85,7 @@ The test follows the steps of the assignment. Notes on how it works:
 - After **Get started** the site shows a screen that is not in the assignment steps, with **Create new wallet** and **Continue with Google**. The test clicks **Create new wallet** as its own step.
 - **Wallet management** is opened by clicking the avatar (initials) in the header pill. The middle of the pill holds the address with a copy button, so a click there copies the address instead.
 - Step 8 checks the main wallet inside the panel's wallet list, not the header pill, which also says "Main Wallet".
-- The "arrow icon next to RECOVERY PHRASE" from the assignment is the **More options** (⋮) button of the recovery phrase section.
+- Step 9 of the assignment says "arrow icon next to the RECOVERY PHRASE label", but **Show or hide wallets** is only in the kebab menu (⋮) next to the label. The arrow on the right only collapses the list. The test clicks the kebab menu, and the difference has been reported to Solflare.
 - Every element is found by its `data-testid` (or another attribute the site sets for it, such as `data-key` on the terms checkbox), not by text, position or CSS classes. The site's CSS classes are generated (e.g. `wctcrs1`) and change between deploys.
 - Every wallet has its public key in its `data-testid`. The keys of the 1st, 3rd and 4th wallet are read in the **Show or hide wallets** dialog, and after **Save** the test checks that exactly these three wallets are listed under the recovery phrase.
 - Every run starts with a fresh browser profile, so a new wallet is created each time and no cleanup is needed.
