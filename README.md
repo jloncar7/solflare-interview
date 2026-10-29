@@ -19,6 +19,8 @@ npm ci
 
 | Command | What it does |
 | --- | --- |
+| `npm test` | Everything: the E2E test (Chrome, headed), then the API tests. The API tests also run when the E2E test fails |
+| `npm test -- --browser=firefox --headless` | Everything, with the E2E test in the given browser and mode |
 | `npm run test:e2e` | E2E test in Chrome, headed |
 | `npm run test:e2e:headless` | E2E test in Chrome, headless (with a normal Chrome User-Agent, see [Findings](#findings)) |
 | `npm run test:e2e:firefox` | E2E test in Firefox |
