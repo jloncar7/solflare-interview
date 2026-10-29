@@ -114,7 +114,7 @@ export const config: WebdriverIO.Config = {
     },
 
     // Ends the last step with the result of the test. A failed test also gets a screenshot,
-    // saved to screenshots/<browser>_<test title>.png and attached to the test in the Allure report.
+    // saved to screenshots/<browser>_<date>_<time>_<test title>.png and attached to the test in the Allure report.
     async afterTest(test, _context, { passed }) {
         endStep(passed);
         log(`${passed ? 'PASSED' : 'FAILED'} ${test.title}`);
