@@ -1,5 +1,6 @@
 import Page from './page';
-import { action, shortKey } from '../../logger';
+import { shortKey } from '../../logger';
+import { action } from '../helpers/report';
 
 /**
  * Wallet management panel (opened from the header avatar) and its "Show or hide wallets" dialog.

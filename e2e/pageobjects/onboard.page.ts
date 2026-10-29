@@ -52,12 +52,13 @@ class OnboardPage extends Page {
         await this.createNewWalletButton.click();
     }
 
+    // mask: true keeps the typed password out of the WebdriverIO logs and reports
     async enterPassword(password: string): Promise<void> {
-        await this.passwordInput.setValue(password);
+        await this.passwordInput.setValue(password, { mask: true });
     }
 
     async enterRepeatPassword(password: string): Promise<void> {
-        await this.repeatPasswordInput.setValue(password);
+        await this.repeatPasswordInput.setValue(password, { mask: true });
     }
 
     async acceptTerms(): Promise<void> {

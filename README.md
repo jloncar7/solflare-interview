@@ -25,10 +25,21 @@ npm ci
 | `npm run test:e2e -- --browser=firefox --headless` | Any combination of browser (`chrome`, `firefox`) and mode |
 | `npm run test:api` | All API tests |
 | `npx playwright test -g "Scenario 2"` | A single API test (every test is independent) |
+| `npm run report` | Allure HTML report of the last E2E run, opened in the browser |
 | `npx playwright show-report` | HTML report of the last API run |
 | `npm run typecheck` | TypeScript check of the whole project |
 
-A screenshot of every failed E2E test is saved to `screenshots/<browser>_<test title>.png` by the generic screenshot module `e2e/helpers/screenshot.ts`.
+A screenshot of every failed E2E test is saved to `screenshots/<browser>_<test title>.png` by the generic screenshot module `e2e/helpers/screenshot.ts`, and it is also attached to the failed step in the Allure report.
+
+### Allure report (E2E)
+
+Every E2E run writes its results to `allure-results/`, and `npm run report` turns them into an HTML report and opens it. It uses Allure 3, which runs on Node.js, so no Java is needed. The report shows:
+
+- every step of the assignment as its own step, with the actions and checks inside it (`e2e/helpers/report.ts`), instead of a long list of WebDriver commands,
+- the error and a screenshot on the step where a test failed,
+- the browser and mode that were tested (Environment).
+
+The typed password is masked (`setValue(..., { mask: true })`) and WebDriver commands are left out of the report, so the password is not in the report either.
 
 Optional environment variables for the E2E test (PowerShell: `$env:SLOW_MO=1000; npm run test:e2e`, bash: `SLOW_MO=1000 npm run test:e2e`):
 
@@ -57,6 +68,7 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 ```
 ├── e2e/
 │   ├── helpers/
+│   │   ├── report.ts                  # test steps for the log and the Allure report
 │   │   └── screenshot.ts              # generic screenshot module, used after every failed test
 │   ├── pageobjects/
 │   │   ├── page.ts                    # base page object
@@ -74,7 +86,7 @@ Every step and action is logged with its time by `logger.ts`, which uses the [wi
 
 ## GitHub Actions
 
-`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. The API HTML report and the screenshots of failed E2E tests are uploaded as artifacts.
+`.github/workflows/tests.yml` runs the API tests and the E2E test in headless Chrome and Firefox. It is started manually from the **Actions** tab with **Run workflow**, or with `gh workflow run tests.yml --ref <branch>`. The API HTML report, the Allure report of each E2E job and the screenshots of failed E2E tests are uploaded as artifacts. A downloaded Allure report is opened with `npx allure open <folder>`.
 
 The E2E jobs pass in both browsers. The API job is red on purpose, because Scenario 2 fails (see [Findings](#findings)), the other API tests pass.
 

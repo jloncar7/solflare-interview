@@ -35,6 +35,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:e2e -- --browser=${{ matrix.browser }} --headless
+      # The Allure HTML report is built and uploaded after every run, passed or failed
+      - run: npx allure generate ./allure-results -o ./allure-report
+        if: always()
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: e2e-allure-report-${{ matrix.browser }}
+          path: allure-report
       - uses: actions/upload-artifact@v7
         if: failure()
         with:

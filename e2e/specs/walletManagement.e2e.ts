@@ -1,6 +1,7 @@
 import onboardPage from '../pageobjects/onboard.page';
 import walletManagementPage from '../pageobjects/walletManagement.page';
-import { action, shortKey, step } from '../../logger';
+import { shortKey } from '../../logger';
+import { action, step } from '../helpers/report';
 
 /** Every run creates a brand-new wallet in a fresh browser profile, so this password protects nothing real. */
 const PASSWORD = process.env.TEST_PASSWORD ?? 'JLoncarSolflare#2026';
@@ -41,7 +42,7 @@ describe('Wallet management', () => {
         await onboardPage.clickContinue();
 
         // Steps 7-8: the wallet is created and the app opens; wallet management lists its wallets
-        step('7: click "Wallet management" (the "Main Wallet" pill in the header)');
+        step('7: click "Wallet management" (the avatar in the header)');
         await walletManagementPage.openWalletManagement();
 
         step('8: verify that the main wallet is displayed');
