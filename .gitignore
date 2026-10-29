@@ -5,3 +5,5 @@ screenshots/
 playwright-report/
 test-results/
 logs/
+allure-results/
+allure-report/
