@@ -3,7 +3,7 @@ import walletManagementPage from '../pageobjects/walletManagement.page';
 import { action, shortKey, step } from '../../logger';
 
 /** Every run creates a brand-new wallet in a fresh browser profile, so this password protects nothing real. */
-const PASSWORD = process.env.TEST_PASSWORD ?? 'QaAutomation#2026';
+const PASSWORD = process.env.TEST_PASSWORD ?? 'JLoncarSolflare#2026';
 
 /**
  * E2E test from the assignment: create a new wallet, show two more wallets of its recovery phrase
@@ -47,6 +47,7 @@ describe('Wallet management', () => {
         step('8: verify that the main wallet is displayed');
         // WebdriverIO's expect waits and retries until the element is displayed, so no fixed pause is needed
         await expect(walletManagementPage.mainWallet).toBeDisplayed();
+        await expect(walletManagementPage.mainWallet).toHaveText('Main Wallet', { containing: true });
         action('OK');
 
         // Steps 9-10: one recovery phrase can create many wallets; this dialog chooses which ones are shown
