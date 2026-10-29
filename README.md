@@ -33,7 +33,7 @@ npm ci
 | `npx playwright show-report` | HTML report of the last API run |
 | `npm run typecheck` | TypeScript check of the whole project |
 
-A screenshot of every failed E2E test is saved to `screenshots/<browser>_<test title>.png` by the generic screenshot module `e2e/helpers/screenshot.ts`, and it is also attached to the failed test in the Allure report.
+A screenshot of every failed E2E test is saved to `screenshots/<browser>_<date>_<time>_<test title>.png` (e.g. `chrome_2026-10-29_15-30-05_should_list_....png`) by the generic screenshot module `e2e/helpers/screenshot.ts`, so earlier failures are kept, and it is also attached to the failed test in the Allure report.
 
 ### Allure report (E2E and API)
 
