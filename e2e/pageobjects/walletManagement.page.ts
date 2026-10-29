@@ -69,14 +69,22 @@ class WalletManagementPage extends Page {
         await this.walletManagementButton.click();
     }
 
+    /**
+     * The wallet management panel slides in from the right. A click while it is still moving can land
+     * next to the button and the menu does not open (seen in 1 of 20 runs), so the test first waits
+     * until the button has stopped moving.
+     */
     async openRecoveryPhraseMenu(): Promise<void> {
+        await this.recoveryPhraseMenuButton.waitForStable();
         await this.recoveryPhraseMenuButton.click();
     }
 
-    /** Opens the dialog and waits until its wallet list is shown. */
+    /** Opens the dialog and waits until its wallet list is shown and has stopped moving (it is animated, too). */
     async clickShowOrHideWallets(): Promise<void> {
+        await this.showOrHideWalletsButton.waitForStable();
         await this.showOrHideWalletsButton.click();
         await this.walletToggles[0].waitForDisplayed();
+        await this.walletToggles[0].waitForStable();
     }
 
     /**
