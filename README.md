@@ -19,7 +19,7 @@ npm ci
 
 | Command | What it does |
 | --- | --- |
-| `npm test` | Everything: the E2E test (Chrome, headed), then the API tests. The API tests also run when the E2E test fails |
+| `npm test` | Everything: the E2E test (Chrome, headed), then the API tests, then the Allure report is built (`npm run report` opens it). Every part also runs when an earlier one fails |
 | `npm test -- --browser=firefox --headless` | Everything, with the E2E test in the given browser and mode |
 | `npm run test:e2e` | E2E test in Chrome, headed |
 | `npm run test:e2e:headless` | E2E test in Chrome, headless (with a normal Chrome User-Agent, see [Findings](#findings)) |
@@ -35,7 +35,7 @@ A screenshot of every failed E2E test is saved to `screenshots/<browser>_<test t
 
 ### Allure report (E2E)
 
-Every E2E run writes its results to `allure-results/`, and `npm run report` turns them into an HTML report and opens it. It uses Allure 3, which runs on Node.js, so no Java is needed. The report shows:
+Every E2E run writes its results to `allure-results/`, and `npm run report` turns them into an HTML report and opens it. `npm test` already builds the report into `allure-report/` at the end (about 3 seconds), but does not open it, so the command still ends on its own. It uses Allure 3, which runs on Node.js, so no Java is needed. The report shows:
 
 - every step of the assignment as its own step, with the actions and checks inside it (`e2e/helpers/report.ts`), instead of a long list of WebDriver commands,
 - the error and a screenshot on the step where a test failed,
