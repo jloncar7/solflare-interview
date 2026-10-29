@@ -69,7 +69,8 @@ jobs:
         with:
           pattern: allure-results-*
           path: allure-results
-      - run: npx allure generate allure-results/* -o allure-report --name "Solflare QA Automation"
+      # Name, grouping and categories come from allurerc.mjs, the result folders are the downloaded artifacts
+      - run: npx allure generate allure-results/*
       - uses: actions/upload-artifact@v7
         with:
           name: allure-report

@@ -9,8 +9,8 @@
     "test:e2e:firefox": "wdio run ./wdio.conf.ts --browser=firefox",
     "test:api": "playwright test",
     "typecheck": "tsc --noEmit",
-    "report": "allure generate ./allure-results/e2e ./allure-results/api -o ./allure-report --clean --name \"Solflare QA Automation\" && allure open ./allure-report",
-    "report:generate": "allure generate ./allure-results/e2e ./allure-results/api -o ./allure-report --clean --name \"Solflare QA Automation\" && echo Allure report is ready, open it with: npm run report"
+    "report": "allure generate --clean && allure open",
+    "report:generate": "allure generate --clean && echo Allure report is ready, open it with: npm run report"
   },
   "repository": {
     "type": "git",

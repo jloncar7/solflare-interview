@@ -1,4 +1,5 @@
 import { rmSync } from 'node:fs';
+import { addEpic, addFeature } from '@wdio/allure-reporter';
 import { log } from './logger';
 import { action, endStep } from './e2e/helpers/report';
 import { saveScreenshot } from './e2e/helpers/screenshot';
@@ -70,7 +71,7 @@ export const config: WebdriverIO.Config = {
             outputDir: ALLURE_RESULTS_DIR,
             disableWebdriverStepsReporting: true,
             // Shown in the report, so it is clear which browser and mode were tested
-            reportedEnvironmentVars: { browser: browserName, headless: String(isHeadless) },
+            reportedEnvironmentVars: { 'E2E browser': browserName, 'E2E headless': String(isHeadless) },
         }],
     ],
     mochaOpts: { timeout: 120000 },
@@ -107,15 +108,19 @@ export const config: WebdriverIO.Config = {
 
     beforeTest(test) {
         log(`START ${test.title}`);
+        // Puts the test under "E2E (WebdriverIO)" > its describe block in the Allure tree, next to the API tests
+        // (groupBy in allurerc.mjs). Epic and feature are used, because the reporter fills the suite labels itself.
+        addEpic('E2E (WebdriverIO)');
+        addFeature(test.parent);
     },
 
-    // Screenshot of every failed test: screenshots/<browser>_<test title>.png (e2e/helpers/screenshot.ts).
-    // It is also attached to the failed step in the Allure report, then that last step is ended.
+    // Ends the last step with the result of the test. A failed test also gets a screenshot,
+    // saved to screenshots/<browser>_<test title>.png and attached to the test in the Allure report.
     async afterTest(test, _context, { passed }) {
+        endStep(passed);
         log(`${passed ? 'PASSED' : 'FAILED'} ${test.title}`);
         if (!passed) {
             await saveScreenshot(test.title);
         }
-        endStep(passed);
     },
 };
